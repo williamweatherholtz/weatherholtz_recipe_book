@@ -1,23 +1,30 @@
 import pylatex
+import datetime
 
+class BookMaker:    
+    def __init__(self, fn: str):
+        self.fn = fn
 
-def make_book(doc: pylatex.Document):
-    ...
+    def _make_book(self, doc: pylatex.Document):
+        doc.append('testing')
 
-def make_class(doc: pylatex.Document):
-    doc.preamble.append(pylatex.Command('title', 'Awesome Title'))
-    doc.preamble.append(pylatex.Command('author', 'Anonymous author'))
-    doc.preamble.append(pylatex.Command('date', pylatex.utils.NoEscape(r'\today')))
-    doc.append(pylatex.utils.NoEscape(r'\maketitle'))
+    def _make_class(self, doc: pylatex.Document):
+        #doc.prea
+        doc.preamble.append(pylatex.Command('title', 'Awesome Title'))
+        doc.preamble.append(pylatex.Command('author', 'Anonymous author'))
+        doc.preamble.append(pylatex.Command('date', str(datetime.datetime.now())))
+        doc.append(pylatex.utils.NoEscape(r'\maketitle'))
 
-def make():
-    doc = pylatex.Document('book')
-    
-    make_class(doc)
-    make_book(doc)
-    
-    doc.generate_pdf(clean_tex=True)
-    #doc.generate_tex()
+    def make():
+        time = datetime.datetime.now()
+        doc = pylatex.Document(self.fn)
+        
+        self.make_class(doc)
+        self.make_book(doc)
+        
+        doc.generate_pdf(clean_tex=True)
+        #doc.generate_tex()
     
 if __name__ == '__main__':
-    make()
+    book = BookMaker('book')
+    book.make()
