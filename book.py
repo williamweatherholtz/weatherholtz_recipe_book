@@ -1,17 +1,30 @@
 import pylatex
 import datetime
-import os
+import os, pathlib, importlib
 
-class BookMaker:    
+class BookMaker:
     def __init__(self, fn: str):
         self.fn = fn
 
-    def _make_book(self, doc: pylatex.Document):
+    def _make_book(self, doc: pylatex.Document, exclude_fns: list[str] = None):
         
-        recipe_sections = [(dirname, fn) for dirname, subdirs, fn in list(os.walk('sections'))[1:]]
+        recipe_sections = [(root, dirs, fn) for root, dirs, fn in list(os.walk('sections'))[1:]]
+        print (recipe_sections)
         
-        for directory, recipefiles in sorted(recipe_sections):
-            print (section)
+        for dir, _, fn in recipe_sections:
+            subdir = pathlib.Path(dir).parts[1:][0]
+            print (subdir)
+            recipe_module = importlib.import_module(f'sections.{subdir}')
+            print (recipe_module)
+            print (recipe_module.recipe)
+            try:
+                command_module = __import__("myapp.commands.%s" % command, fromlist=["myapp.commands"])
+                command_module.run()
+            except ImportError:
+                ...
+                # Display error message
+
+        
         
         doc.append('testing')
 
@@ -19,11 +32,11 @@ class BookMaker:
         doc.preamble.append(pylatex.Command('title', 'Weatherholtz Recipe Book'))
         doc.preamble.append(pylatex.Command('author', 'Weatherholtz & Extended Family'))
         doc.preamble.append(pylatex.Command('date', str(datetime.datetime.now())))
+        
         doc.append(pylatex.utils.NoEscape(r'\maketitle'))
 
     def make(self):
-        time = datetime.datetime.now()
-        doc = pylatex.Document(self.fn, document_options=['twoside', 'openright', 'a5paper'] ,documentclass='book')
+        doc = pylatex.Document(self.fn, document_options= ['twoside', 'openright', 'a5paper'], documentclass= 'book')
         
         self._make_class(doc)
         self._make_book(doc)
@@ -34,6 +47,7 @@ class BookMaker:
 if __name__ == '__main__':
     book = BookMaker('book')
     book.make()
+    
     '''\documentclass{heather_book}
 
 \author{Heather Wickern}
