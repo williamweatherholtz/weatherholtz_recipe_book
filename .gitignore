@@ -463,3 +463,6 @@ cython_debug/
 #.idea/
 
 .vscode
+scratch.py
+
+/temp
