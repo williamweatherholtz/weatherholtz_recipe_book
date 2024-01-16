@@ -1,13 +1,17 @@
+!Recipe
 title: My Recipe
 description: Heres what i do
 author: im the author
+section: Desserts
 steps:
-- title: the frosting
+- !RecipeStep
+  title: the frosting
   description: yummy frosting
   ingredients:
   - 1 cup peas
   - 1 lb beet juice
-- title: the cookie
+- !RecipeStep
+  title: the cookie
   description: yummy frosting
   ingredients:
   - 1 cup peas

@@ -1,41 +1,79 @@
 import pylatex
 import datetime
-import os, pathlib, importlib
+import os
+from dataclasses import dataclass, field
+import datetime
+from src.recipe import Recipe, RecipeStep, YamlLoader
 
+@dataclass
+class RecipeStyler:
+    recipe: Recipe
+    doc: pylatex.Document
+    
+    def stylize(self):
+        
+        self.doc.append(self.recipe)
+        self.doc.append('\n\n')
+        ...
+        
+        
+@dataclass
 class BookMaker:
-    def __init__(self, fn: str):
-        self.fn = fn
+    title: str = None
+    author: str = None
+    root_dir: str = 'sections'
+    cover_img: str = None
+    exclude_fns: list[str] = field(default_factory=list)
+    version: str = None
+    
+    def __post_init__(self, *args, **kwargs):
+        self._auto_version()
+        
+        self.fn = ''.join(c for c in self.title if c.isalnum)
+        
+        return self
+    
+    def _auto_version(self):
+        """_summary_: if a version is not provided, we'll use the date
+        """
+        if self.version is not None:
+            return
+        
+        time = datetime.datetime.now()
+        self.version = time.strftime("%d/%m/%Y")
+    
+    @property
+    def recipes(self) -> list[str]:
+        PARSE_FILES = ['.yaml', '.yml']
+        recipes: list[Recipe] = []
+        
+        for dir, _, files in os.walk(self.root_dir):
+            yamls = [os.path.join(dir, f) for f in files if os.path.splitext(f)[1] in PARSE_FILES]
+            recipes.extend((YamlLoader.load(fn) for fn in yamls))
+        
+        return sorted(recipes, key= lambda r: r.section)
 
-    def _make_book(self, doc: pylatex.Document, exclude_fns: list[str] = None):
+    def _make_book(self, doc: pylatex.Document):
+        #doc.append(f'{self.title}')
+        #doc.append(f'Author: {self.author}')
+        #doc.append(f'Rev. {self.version}')
         
-        recipe_sections = [(root, dirs, fn) for root, dirs, fn in list(os.walk('sections'))[1:]]
-        print (recipe_sections)
-        
-        for dir, _, fn in recipe_sections:
-            subdir = pathlib.Path(dir).parts[1:][0]
-            print (subdir)
-            recipe_module = importlib.import_module(f'sections.{subdir}')
-            print (recipe_module)
-            print (recipe_module.recipe)
-            try:
-                command_module = __import__("myapp.commands.%s" % command, fromlist=["myapp.commands"])
-                command_module.run()
-            except ImportError:
-                ...
-                # Display error message
-
-        
-        
-        doc.append('testing')
+        for r in self.recipes:
+            RecipeStyler(recipe= r, doc= doc).stylize()
+            
 
     def _make_class(self, doc: pylatex.Document):
-        doc.preamble.append(pylatex.Command('title', 'Weatherholtz Recipe Book'))
-        doc.preamble.append(pylatex.Command('author', 'Weatherholtz & Extended Family'))
-        doc.preamble.append(pylatex.Command('date', str(datetime.datetime.now())))
+        doc.preamble.append(pylatex.Command('title', self.title))
+        doc.preamble.append(pylatex.Command('author', self.author))
+        doc.preamble.append(pylatex.Command('date', datetime.datetime.now().year))
+        
+        #doc.preamble.append(pylatex.Command('date', str(self.version)))
+        
         
         doc.append(pylatex.utils.NoEscape(r'\maketitle'))
 
     def make(self):
+        
         doc = pylatex.Document(self.fn, document_options= ['twoside', 'openright', 'a5paper'], documentclass= 'book')
         
         self._make_class(doc)
@@ -43,70 +81,3 @@ class BookMaker:
         
         doc.generate_pdf(clean_tex=True)
         #doc.generate_tex()
-    
-if __name__ == '__main__':
-    book = BookMaker('book')
-    book.make()
-    
-    '''\documentclass{heather_book}
-
-\author{Heather Wickern}
-\title{Demolition
-Directorate of Countries - Book 1}
-%\posttitle{Directorate of Countries \minus Book 1}
-
-\begin{document}%
-\frontmatter
-% cover
-\newgeometry{left=-0.6cm, bottom=0cm, right=0.5cm, top=0cm}
-    \includegraphics[width=1.0\textwidth, height=1.0\textheight]{assets/cover}
-    \restoregeometry
-    \setcounter{page}{1}
-
-\maketitle
-
-
-\chapter{Dedication}
-%\chapter{Copyright}
-%\chapter{Acknowledgements}
-
-%\tableofcontents
-
-\mainmatter
-\part{Part One}
-
-\input{part1/1.tex}
-\input{part1/2.tex}
-\input{part1/3.tex}
-\input{part1/4.tex}
-\input{part1/5.tex}
-\input{part1/6.tex}
-\input{part1/7.tex}
-\input{part1/8.tex}
-
-\part{Part Two}
-
-\input{part2/9.tex}
-\input{part2/10.tex}
-\input{part2/11.tex}
-\input{part2/12.tex}
-\input{part2/13.tex}
-\input{part2/14.tex}
-\input{part2/15.tex}
-\input{part2/16.tex}
-\input{part2/17.tex}
-\input{part2/18.tex}
-\input{part2/19.tex}
-\input{part2/20.tex}
-
-\part{Fake Part 3}
-
-\input{part3/chapter21.tex}
-
-\backmatter
-% any back matter here.  bibliography, other titles in this collection, etc.
-%\chapter{My other books}
-%jk there are none
-
-\end{document}
-'''

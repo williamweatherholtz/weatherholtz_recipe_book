@@ -5,7 +5,7 @@ import yaml
 
 @dataclass
 class RecipeStep:
-    name: str
+    title: str
     description: str = None
     ingredients: list[str] = field(default_factory=list[str])
     image_fn: str = None
@@ -13,11 +13,12 @@ class RecipeStep:
 
 @dataclass
 class Recipe:
-    name: str
+    title: str
     author: str
+    section: str
     description: str = None
-    steps: list[RecipeStep] = field(default_factory=list[RecipeStep])
     image_fn: str = None
+    steps: list[RecipeStep] = field(default_factory=list[RecipeStep])
     
     def save(self, fn: str):
         with open(fn, 'w') as writer:
@@ -37,11 +38,11 @@ class YamlLoader:
     
     @staticmethod
     def get_loader():
-            loader = yaml.SafeLoader
-            loader.add_constructor("!Recipe", YamlLoader._recipe_con)
-            loader.add_constructor("!RecipeStep", YamlLoader._recipe_step_con)
-            return loader
+        loader = yaml.SafeLoader
+        loader.add_constructor("!Recipe", YamlLoader._recipe_con)
+        loader.add_constructor("!RecipeStep", YamlLoader._recipe_step_con)
+        return loader
     
-    def load(fn: str) -> Recipe:
-        with open('filetarget.yaml', 'r') as reader:
+    def load(filename: str) -> Recipe:
+        with open(filename, 'r') as reader:
             return yaml.load(reader, Loader=YamlLoader.get_loader())
